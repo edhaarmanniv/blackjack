@@ -81,7 +81,8 @@ class Player:
         return
 
     def stay(self):
-        pass
+        self.keep_playing = False
+        return
 
     def score(self):
         score = 0
@@ -97,19 +98,23 @@ class Player:
 
     def play(self):
         while self.keep_playing and not self.bust and not self.blackjack:
-            choice = input("(H)it or (S)tay: ")
+            choice = input(f"Player {self.name}:\n(H)it or (S)tay: ")
             if choice in {"H", "h", "Hit", "hit"}:
                 self.hit(self.deck.draw())
+                print(self)
             elif choice in {"S", "s", "Stay", "stay"}:
                 self.stay()
-                self.keep_playing = False
             # elif split:
-            # elif double:
+            # elif double: 
             else:
                 print("Invalid Selection! Select Again")
-            print(self.show_hand())
+            
             if self.blackjack:
                 print("21!")
+                self.keep_playing = False
+            
+            if self.bust:
+                print("Busted!")
                 self.keep_playing = False
         return
 
@@ -131,9 +136,10 @@ class Dealer(Player):
     def show_hidden(self):
         for card in self.hand:
             if card.facedown == True:
-                return card.flip_show()
+                card.flip()
 
     def play(self):
+        print("Dealer's Turn:")
         if self.score() > 21:
             bust = True
         elif self.score() < 16:
@@ -141,19 +147,19 @@ class Dealer(Player):
                 self.hit(self.deck.draw())
         else:
             self.stay()
+        self.show_hidden()
         return
 
     def score(self):
         score = 0
         for card in self.hand:
-            if card.facedown == False:
-                if card.face == "A":
-                    if score + card.value[1] > 21:
-                        score += card.value[0]
-                    else:
-                        score += card.value[1]
+            if card.face == "A":
+                if score + card.value[1] > 21:
+                    score += card.value[0]
                 else:
-                    score += card.value
+                    score += card.value[1]
+            else:
+                score += card.value
         return score
 
 
@@ -170,10 +176,13 @@ class Table:
     def create_table(self, players, dealer):
         column_headers = ["Player", "Score", "Hand"]
         table_data = [column_headers]
-        table_data.append(
-            [self.dealer.name, self.dealer.score(), self.dealer.show_hand()]
-        )
-
+        players_done_playing = {player.keep_playing for player in players}
+        if len(players_done_playing) == 1 and False in players_done_playing:
+            table_data.append([self.dealer.name, self.dealer.score(), self.dealer.show_hand()])
+        else:
+            table_data.append(
+            [self.dealer.name, "??", self.dealer.show_hand()]
+            )
         table_data.extend(
             [
                 [player.name, player.score(), player.show_hand()]

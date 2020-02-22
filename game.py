@@ -10,9 +10,11 @@ for _, suit in suits["solid"].items():
 deck = Deck(cards)
 deck.shuffle()
 
-players = create_gamblers()
+players = create_gamblers(deck)
 dealer = Dealer(deck)
 table = Table(players, dealer)
-print(table)
-
+# ed = Player(deck, "Ed")
+# table = Table([ed], dealer)
 game(deck, table, players, dealer)
+# print("starting game")
+# game(deck, table, [ed], dealer)
