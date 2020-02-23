@@ -49,6 +49,7 @@ class Deck:
             top_card = self.cards.pop()
         else:
             print("NO MORE CARDS")
+            top_card = 0
         return top_card
 
     def cards_left(self):
@@ -56,13 +57,13 @@ class Deck:
 
 
 class Player:
-    def __init__(self, deck, name="Player"):
+    def __init__(self, name="Player"):
         self.hand = []
         self.name = name
-        self.deck = deck
         self.blackjack = False
         self.bust = False
         self.keep_playing = True
+        self.num_wins = 0
         return
 
     def __str__(self):
@@ -88,31 +89,34 @@ class Player:
         score = 0
         for card in self.hand:
             if card.face == "A":
-                if score + card.value[1] > 21:
-                    score += card.value[0]
-                else:
-                    score += card.value[1]
+                values = [score+value for value in card.value]
+                score += max(card.value) if max(values) <= 21 else min(card.value)
+                # if score + card.value[1] > 21:
+                #     score += card.value[0]
+                # else:
+                #     score += card.value[1]
+
             else:
                 score += card.value
         return score
 
-    def play(self):
+    def play(self, deck):
         while self.keep_playing and not self.bust and not self.blackjack:
             choice = input(f"Player {self.name}:\n(H)it or (S)tay: ")
             if choice in {"H", "h", "Hit", "hit"}:
-                self.hit(self.deck.draw())
+                self.hit(deck.draw())
                 print(self)
             elif choice in {"S", "s", "Stay", "stay"}:
                 self.stay()
             # elif split:
-            # elif double: 
+            # elif double:
             else:
                 print("Invalid Selection! Select Again")
-            
+
             if self.blackjack:
                 print("21!")
                 self.keep_playing = False
-            
+
             if self.bust:
                 print("Busted!")
                 self.keep_playing = False
@@ -127,10 +131,16 @@ class Player:
                 hand_str += card.front
         return hand_str
 
+    def reset_hand(self):
+        self.hand = []
+        self.blackjack = False
+        self.bust = False
+        self.keep_playing = True
+
 
 class Dealer(Player):
-    def __init__(self, deck):
-        super().__init__(deck, "Dealer")
+    def __init__(self):
+        super().__init__("Dealer")
         return
 
     def show_hidden(self):
@@ -138,13 +148,13 @@ class Dealer(Player):
             if card.facedown == True:
                 card.flip()
 
-    def play(self):
+    def play(self, deck):
         print("Dealer's Turn:")
         if self.score() > 21:
             bust = True
         elif self.score() < 16:
             while self.score() < 17:
-                self.hit(self.deck.draw())
+                self.hit(deck.draw())
         else:
             self.stay()
         self.show_hidden()
@@ -178,11 +188,11 @@ class Table:
         table_data = [column_headers]
         players_done_playing = {player.keep_playing for player in players}
         if len(players_done_playing) == 1 and False in players_done_playing:
-            table_data.append([self.dealer.name, self.dealer.score(), self.dealer.show_hand()])
-        else:
             table_data.append(
-            [self.dealer.name, "??", self.dealer.show_hand()]
+                [self.dealer.name, self.dealer.score(), self.dealer.show_hand()]
             )
+        else:
+            table_data.append([self.dealer.name, "??", self.dealer.show_hand()])
         table_data.extend(
             [
                 [player.name, player.score(), player.show_hand()]

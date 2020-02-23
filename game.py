@@ -10,11 +10,12 @@ for _, suit in suits["solid"].items():
 deck = Deck(cards)
 deck.shuffle()
 
-players = create_gamblers(deck)
-dealer = Dealer(deck)
+players = create_gamblers()
+dealer = Dealer()
 table = Table(players, dealer)
-# ed = Player(deck, "Ed")
-# table = Table([ed], dealer)
-game(deck, table, players, dealer)
-# print("starting game")
-# game(deck, table, [ed], dealer)
+
+nother_hand = True
+while nother_hand and deck.num_cards >= 2*len(players):
+    game(deck, table, players, dealer)
+    nother_hand = bool(input("'nother hand?"))
+    reset_hands(players, dealer)
