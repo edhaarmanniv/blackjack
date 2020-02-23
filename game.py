@@ -7,7 +7,8 @@ for _, suit in suits["solid"].items():
     for face, face_value in faces.items():
         cards.append(Card(face, face_value, suit))
 
-deck = Deck(cards)
+
+deck = Deck(num_decks() * cards)
 deck.shuffle()
 
 players = create_gamblers()
@@ -20,7 +21,4 @@ while nother_hand and deck.num_cards > (2 * len(players) + 1):
     nother_hand = bool(input("'nother hand?"))
     reset_hands(players, dealer)
 else:
-    print(
-        """No more cards! Thank you for playing.
-        Stay Tuned for multi-deck play!"""
-    )
+    print("No more cards! Thank you for playing.")

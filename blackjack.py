@@ -195,13 +195,7 @@ class Table:
             )
         else:
             table_data.append(
-                [
-                    dealer.name,
-                    "??",
-                    dealer.show_hand(),
-                    dealer.show_blackjack(),
-                    dealer.num_wins,
-                ]
+                [dealer.name, "??", dealer.show_hand(), "", dealer.num_wins,]
             )
         table_data.extend(
             [

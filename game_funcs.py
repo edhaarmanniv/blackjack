@@ -24,15 +24,17 @@ def game(deck, table, players, dealer):
     return
 
 
+def num_decks():
+    return int(input("How many decks to play with? "))
+
+
 def player_names():
     names = []
-    more_players = True
-    print("Add players by name. Type '0' to Stop Entering")
-    while more_players:
+    name = True
+    print("Add players by name. Return on blank to finish player entry.")
+    while name:
         name = input("Player Name: ")
-        if name == str(0):
-            more_players = False
-        else:
+        if name:
             names.append(name)
     return names
 
