@@ -71,6 +71,9 @@ class Player:
 
     def add_card(self, card):
         self.hand.append(card)
+        if self.score() == 21:
+            self.blackjack = True
+            self.keep_playing = False
         return
 
     def hit(self, card):
@@ -87,39 +90,40 @@ class Player:
 
     def score(self):
         score = 0
-        for card in self.hand:
+        hand = self.hand.copy()
+        for card in hand:
             if card.face == "A":
-                values = [score+value for value in card.value]
-                score += max(card.value) if max(values) <= 21 else min(card.value)
-                # if score + card.value[1] > 21:
-                #     score += card.value[0]
-                # else:
-                #     score += card.value[1]
+                hand.append(hand.pop(hand.index(card)))
 
+        for card in hand:
+            if card.face == "A":
+                values = [score + value for value in card.value]
+                score += max(card.value) if max(values) <= 21 else min(card.value)
             else:
                 score += card.value
         return score
 
     def play(self, deck):
-        while self.keep_playing and not self.bust and not self.blackjack:
-            choice = input(f"Player {self.name}:\n(H)it or (S)tay: ")
-            if choice in {"H", "h", "Hit", "hit"}:
-                self.hit(deck.draw())
-                print(self)
-            elif choice in {"S", "s", "Stay", "stay"}:
-                self.stay()
-            # elif split:
-            # elif double:
-            else:
-                print("Invalid Selection! Select Again")
+        if not self.blackjack:
+            while self.keep_playing and not self.bust and not self.blackjack:
+                choice = input(f"Player {self.name}:\n(H)it or (S)tay: ")
+                if choice in {"H", "h", "Hit", "hit"}:
+                    self.hit(deck.draw())
+                    print(self)
+                elif choice in {"S", "s", "Stay", "stay"}:
+                    self.stay()
+                # elif split:
+                # elif double:
+                else:
+                    print("Invalid Selection! Select Again")
 
-            if self.blackjack:
-                print("21!")
-                self.keep_playing = False
+                if self.blackjack:
+                    print("21!")
+                    self.keep_playing = False
 
-            if self.bust:
-                print("Busted!")
-                self.keep_playing = False
+                if self.bust:
+                    print("Busted!")
+                    self.keep_playing = False
         return
 
     def show_hand(self):
@@ -136,6 +140,12 @@ class Player:
         self.blackjack = False
         self.bust = False
         self.keep_playing = True
+
+    def show_blackjack(self):
+        bj = ""
+        if self.blackjack:
+            bj = "\u2605"
+        return bj
 
 
 class Dealer(Player):
@@ -160,23 +170,9 @@ class Dealer(Player):
         self.show_hidden()
         return
 
-    def score(self):
-        score = 0
-        for card in self.hand:
-            if card.face == "A":
-                if score + card.value[1] > 21:
-                    score += card.value[0]
-                else:
-                    score += card.value[1]
-            else:
-                score += card.value
-        return score
-
 
 class Table:
     def __init__(self, players, dealer):
-        self.players = players
-        self.dealer = dealer
         self.table = self.create_table(players, dealer)
         return
 
@@ -184,19 +180,39 @@ class Table:
         return self.show_table()
 
     def create_table(self, players, dealer):
-        column_headers = ["Player", "Score", "Hand"]
+        column_headers = ["Player", "Score", "Hand", "Blackjack", "Wins"]
         table_data = [column_headers]
         players_done_playing = {player.keep_playing for player in players}
         if len(players_done_playing) == 1 and False in players_done_playing:
             table_data.append(
-                [self.dealer.name, self.dealer.score(), self.dealer.show_hand()]
+                [
+                    dealer.name,
+                    dealer.score(),
+                    dealer.show_hand(),
+                    dealer.show_blackjack(),
+                    dealer.num_wins,
+                ]
             )
         else:
-            table_data.append([self.dealer.name, "??", self.dealer.show_hand()])
+            table_data.append(
+                [
+                    dealer.name,
+                    "??",
+                    dealer.show_hand(),
+                    dealer.show_blackjack(),
+                    dealer.num_wins,
+                ]
+            )
         table_data.extend(
             [
-                [player.name, player.score(), player.show_hand()]
-                for player in self.players
+                [
+                    player.name,
+                    player.score(),
+                    player.show_hand(),
+                    player.show_blackjack(),
+                    player.num_wins,
+                ]
+                for player in players
             ]
         )
 

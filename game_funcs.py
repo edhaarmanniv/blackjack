@@ -20,7 +20,7 @@ def game(deck, table, players, dealer):
 
     dealer.play(deck)
     print(table.create_table(players, dealer))
-    display_winners(winners(players, dealer))
+    display_winners(players, dealer)
     return
 
 
@@ -43,17 +43,34 @@ def create_gamblers():
     return gamblers
 
 
-def winners(players, dealer):
+def calc_winners(players, dealer):
     winners = []
-    scores = [player.score() for player in players]
-    if dealer.blackjack:
+    scores = [
+        {"score": player.score(), "bust": player.bust, "blackjack": player.blackjack}
+        for player in players
+    ]
+
+    if (
+        (dealer.blackjack)
+        or (
+            all(
+                dealer.score() >= score["score"]
+                for score in scores
+                if not score["bust"]
+            )
+            and not dealer.bust
+        )
+        or all(score["bust"] for score in scores)
+    ):
         winners.append(dealer)
-    elif any(player.blackjack for player in players):
+    elif any(score["blackjack"] for score in scores):
         winners = [player for player in players if player.blackjack]
-    elif all(dealer.score() >= score for score in scores) and not dealer.bust:
-            winners = [dealer]
     else:
-        winners = [player for player in players if player.score == max(scores)]
+        winners = [
+            player
+            for player in players
+            if (not player.bust and player.score() > dealer.score())
+        ]
 
     for winner in winners:
         winner.num_wins += 1
@@ -61,13 +78,15 @@ def winners(players, dealer):
     return winners
 
 
-def display_winners(winners):
-    win = "Winners:" if len(winners) > 1 else "Winner:"
-    if len(winners) == 1 and winners[0].name == "Dealer":
+def display_winners(players, dealer):
+    winners = calc_winners(players, dealer)
+    winner_names = [winner.name for winner in winners]
+    win = "Winners:" if len(winner_names) > 1 else "Winner:"
+    if len(winner_names) == 1 and winner_names[0] == "Dealer":
         print("Dealer Wins! :(")
     else:
         print(win)
-        print(*winners, sep=", ")
+        print(*winner_names, sep=", ")
 
 
 def reset_hands(players, dealer):
